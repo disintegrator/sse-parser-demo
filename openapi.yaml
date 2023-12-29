@@ -1,0 +1,53 @@
+openapi: 3.1.0
+info:
+  title: My API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /completion:
+    post:
+      summary: Submit a chat completion request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schema/ChatCompletionRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            text/event-stream:
+              schema:
+                $ref: "#/components/schema/ChatCompletionStream"
+
+components:
+  schema:
+    ChatCompletionRequest:
+      type: object
+      required: [stream, prompt]
+      properties:
+        stream: { type: boolean }
+        prompt: { type: string }
+        stop:
+          type: array
+          items:
+            type: string
+    ChatCompletionStream:
+      type: object
+      required: [data]
+      additionalProperties: true
+      properties:
+        event:
+          type: string
+        data:
+          contentMediaType: application/json
+          type: object
+          required: [content, stop]
+          properties:
+            content:
+              type: string
+            stop:
+              type: boolean
