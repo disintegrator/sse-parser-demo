@@ -1,5 +1,12 @@
 import { ZodSchema, ZodTypeDef } from "zod";
 
+export type ServerEvent = {
+  data: string;
+  name: string;
+  retry?: number;
+  id?: string;
+};
+
 export class LineDecoderStream
   implements ReadableWritablePair<Uint8Array, Uint8Array>
 {
@@ -70,13 +77,6 @@ export class LineDecoderStream
   }
 }
 
-export type ServerEvent = {
-  data?: string;
-  retry?: number;
-  id?: string;
-  name?: string;
-};
-
 export class EventDecoderStream
   implements ReadableWritablePair<ServerEvent, Uint8Array>
 {
@@ -103,36 +103,46 @@ export class EventDecoderStream
     const decoder = new TextDecoder();
     const raw = decoder.decode(chunk);
     const lines = raw.split(/\r?\n|\r/g);
-    const event: ServerEvent = {};
+    const event: ServerEvent = { data: "", name: "" };
+    let publish = false;
+
     for (const line of lines) {
       if (!line) {
         continue;
       }
+
       const delim = line.indexOf(":");
-      if (delim === -1) {
-        event.name = line;
+      // Lines starting with a colon are ignored.
+      if (delim === 0) {
         continue;
       }
 
-      const field = line.substring(0, delim);
-      let value = line.substring(delim + 1);
+      const field = delim > 0 ? line.substring(0, delim) : "";
+      let value = delim > 0 ? line.substring(delim + 1) : "";
       if (value.charAt(0) === " ") {
         value = value.substring(1);
       }
 
       switch (field) {
+        case "event": {
+          publish = true;
+          event.name = value;
+          break;
+        }
         case "data": {
-          event.data = event.data || "";
+          publish = true;
           event.data += value + "\n";
           break;
         }
         case "id": {
+          publish = true;
           event.id = value;
           break;
         }
         case "retry": {
           const retry = parseInt(value, 10);
           if (!Number.isNaN(retry)) {
+            publish = true;
             event.retry = retry;
           }
           break;
@@ -144,7 +154,11 @@ export class EventDecoderStream
       event.data = event.data.slice(0, -1);
     }
 
-    this.#channel.dispatchEvent(new CustomEvent("message", { detail: event }));
+    if (publish) {
+      this.#channel.dispatchEvent(
+        new CustomEvent("message", { detail: event })
+      );
+    }
   }
 
   private async close() {
