@@ -61,7 +61,7 @@ func main() {
 	defer stream.Close()
 
 	for stream.Next() {
-		if event := stream.Value(); !event.Empty {
+		if event := stream.Value(); event != nil {
 			fmt.Print(event.Data)
 		}
 	}

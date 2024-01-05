@@ -133,8 +133,11 @@ func (es *EventStream[T]) Next() bool {
 		}
 	}
 
-	event.Empty = !publish
-	es.val = &event
+	if publish {
+		es.val = &event
+	} else {
+		es.val = nil
+	}
 
 	return true
 }
