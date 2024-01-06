@@ -1,17 +1,12 @@
 import { body } from "./request.js";
-import { ServerEventsDecoderStream, ZodDecoderStream } from "./streaming.js";
-import { Writable } from "node:stream";
+import { consumeStream } from "./streaming.js";
 import * as z from "zod";
 
 const schema = z
   .object({
-    data: z
-      .string()
-      .default("{}")
-      .transform((v) => JSON.parse(v)),
+    content: z.string().default(""),
   })
-  .transform((v) => v.data?.content)
-  .pipe(z.string().default(""));
+  .transform((v) => v.content);
 
 const res = await fetch("http://localhost:8080/completion", {
   headers: {
@@ -29,17 +24,11 @@ if (res.body == null) {
   throw new TypeError("No response body found");
 }
 
-await res.body
-  .pipeThrough(/*   💅    */ new ServerEventsDecoderStream())
-  .pipeThrough(new ZodDecoderStream(schema))
-  .pipeTo(Writable.toWeb(process.stdout));
+const parseMessage = (data: string) => schema.parse(JSON.parse(data));
 
-/*
-The above code is sugar for:
-
-await res.body
-  .pipeThrough(new LineDecoderStream())
-  .pipeThrough(new EventDecoderStream())
-  .pipeThrough(new ZodDecoderStream(schema))
-  .pipeTo(Writable.toWeb(process.stdout));
-*/
+for await (const event of consumeStream(res.body, parseMessage)) {
+  if (!event.data) {
+    continue;
+  }
+  process.stdout.write(event.data);
+}
