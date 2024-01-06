@@ -90,6 +90,7 @@ func (es *EventStream[T]) Next() bool {
 	var event ServerEvent[T]
 	lines := lineEnding.Split(string(b), -1)
 	publish := false
+	data := ""
 	for _, line := range lines {
 		if line == "" {
 			continue
@@ -124,13 +125,19 @@ func (es *EventStream[T]) Next() bool {
 			}
 		case "data":
 			publish = true
-			var err error
-			event.Data, err = es.unmarshaller([]byte(value))
-			if err != nil {
-				es.err = err
-				return false
-			}
+			data += value + "\n"
 		}
+	}
+
+	if len(data) > 0 {
+		data = data[:len(data)-1]
+	}
+
+	var err error
+	event.Data, err = es.unmarshaller([]byte(data))
+	if err != nil {
+		es.err = err
+		return false
 	}
 
 	if publish {
