@@ -5,5 +5,6 @@ an LLM (llamafile).
 
 Available examples:
 
-- [Go](./golang/)
-- [TypeScript](./typescript/)
+- [Go](./golang/main.go)
+- [TypeScript](./typescript/main.ts)
+- [Python](./python/sse_demo/__main__.py)
