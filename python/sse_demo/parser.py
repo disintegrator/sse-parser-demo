@@ -28,7 +28,7 @@ def stream_events(stream: Iterator[bytes], decoder: Callable[[str], T] = decode_
     for chunk in stream:
         buffer += chunk
         for i in range(position, len(buffer)):
-            char = buffer[i:i+1]
+            char = buffer[i : i + 1]
             seq: bytes | None = None
             if char in [b"\r", b"\n"]:
                 for s in MESSAGE_BOUNDARIES:
@@ -44,9 +44,13 @@ def stream_events(stream: Iterator[bytes], decoder: Callable[[str], T] = decode_
             if event is not None:
                 yield event
 
-    if position > 0:
-        buffer = buffer[position:]
-        position = 0
+        if position > 0:
+            buffer = buffer[position:]
+            position = 0
+
+    event = _parse_event(buffer, decoder)
+    if event is not None:
+        yield event
 
 
 def _parse_event(raw: bytearray, decoder: Callable[[str], T]):
@@ -64,7 +68,7 @@ def _parse_event(raw: bytearray, decoder: Callable[[str], T]):
             continue
 
         field = line[0:delim]
-        value = line[delim+1:] if delim < len(line) - 1 else ""
+        value = line[delim + 1 :] if delim < len(line) - 1 else ""
         if len(value) and value[0] == " ":
             value = value[1:]
 
@@ -93,7 +97,7 @@ def _peek_sequence(position: int, buffer: bytearray, sequence: bytes):
         return None
 
     for i in range(0, len(sequence)):
-        if buffer[position+i] != sequence[i]:
+        if buffer[position + i] != sequence[i]:
             return None
 
     return sequence

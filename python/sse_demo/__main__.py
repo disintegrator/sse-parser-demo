@@ -6,8 +6,11 @@ from sse_demo.parser import stream_events
 
 u = "http://localhost:8080/completion"
 
-headers = {"accept": "text/event-stream",
-           "cache-control": "no-cache", "content-type": "application/json"}
+headers = {
+    "accept": "text/event-stream",
+    "cache-control": "no-cache",
+    "content-type": "application/json",
+}
 
 body = {
     "stream": True,
@@ -30,13 +33,12 @@ body = {
     "image_data": [],
     "cache_prompt": True,
     "slot_id": -1,
-    "prompt":
-    "This is a conversation between User and Llama, a friendly chatbot. Llama is helpful, kind, honest, good at writing, and never fails to answer any requests immediately and with precision.\n" +
-    "\n" +
-    "User: Tell me about Maine Coon cats?\n" +
-    "\n" +
-    "You are an expert veterinarian, cat groomer and competition judge. You have decades of experience on different cats including their temperaments, intelligence, cleanliness, diets and diseases.\n" +
-    "Llama:",
+    "prompt": "This is a conversation between User and Llama, a friendly chatbot. Llama is helpful, kind, honest, good at writing, and never fails to answer any requests immediately and with precision.\n"
+    + "\n"
+    + "User: Tell me about Maine Coon cats?\n"
+    + "\n"
+    + "You are an expert veterinarian, cat groomer and competition judge. You have decades of experience on different cats including their temperaments, intelligence, cleanliness, diets and diseases.\n"
+    + "Llama:",
 }
 
 
